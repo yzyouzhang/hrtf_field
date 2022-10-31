@@ -145,17 +145,17 @@ def initParams():
     # Dataset parameters
     parser.add_argument("-d", "--dataset_path", type=str, default="/data2/neil/HRTF/datasets/")
     parser.add_argument('-n', '--training_dataset_names', nargs='+',
-                        default=["ari", "hutubs", "cipic", "3d3a", "riec",
-                                 "bili", "listen", "crossmod"])
+                        default=["ari", "hutubs", "cipic", "3d3a", "ita",
+                                 "bili", "listen", "crossmod", "sadie"])
     parser.add_argument('-t', '--testing_dataset_names', nargs='+',
-                        default=["ita"])
+                        default=["riec"])
     parser.add_argument("-f", "--frequency_idx", type=int, default=1000, help="index of frequency of HRTF, 1000 if use all")
     parser.add_argument("-s", "--scale", choices=["log", "linear"],
-                        default="linear", help="magnitude in the log or linear scale")
+                        default="log", help="magnitude in the log or linear scale")
     parser.add_argument("--norm_way", type=int, default=2, help="way of normalization across datasets")
 
     # Model parameters
-    parser.add_argument("-w", "--first_w0", type=float, default=8, help="w0 for the first SIREN layer")
+    parser.add_argument("-w", "--first_w0", type=float, default=30, help="w0 for the first SIREN layer")
     parser.add_argument("-z", "--num_latent", type=int,  default=32, help="latent code dimension")
     parser.add_argument('--hidden_features', type=int, default=2048, help="hidden layer dimension")
     parser.add_argument('--num_layers', type=int, default=2, help="Number of hidden layers")
@@ -315,11 +315,11 @@ def test_one_epoch(testDataLoader, F, args):
 def run(args):
     trainDataset = MergedHRTFDataset(args.training_dataset_names,
                                      args.frequency_idx, args.scale, args.norm_way)
-    # trainDataLoader = DataLoader(trainDataset, batch_size=args.batch_size, shuffle=True,
-    #                              collate_fn=trainDataset.collate_fn, num_workers=args.num_workers)
-    partialTrainDataset = PartialHRTFDataset(args.testing_dataset_names, args.frequency_idx, args.scale, args.norm_way)
-    trainDataLoader = DataLoader(partialTrainDataset, batch_size=args.batch_size, shuffle=True,
+    trainDataLoader = DataLoader(trainDataset, batch_size=args.batch_size, shuffle=True,
                                  collate_fn=trainDataset.collate_fn, num_workers=args.num_workers)
+    # partialTrainDataset = PartialHRTFDataset(args.testing_dataset_names, args.frequency_idx, args.scale, args.norm_way)
+    # trainDataLoader = DataLoader(trainDataset + partialTrainDataset, batch_size=args.batch_size, shuffle=True,
+    #                              collate_fn=trainDataset.collate_fn, num_workers=args.num_workers)
     testDataset = MergedHRTFDataset(args.testing_dataset_names,
                                     args.frequency_idx, args.scale, args.norm_way)
     testDataLoader = DataLoader(testDataset, batch_size=args.batch_size, shuffle=False,
