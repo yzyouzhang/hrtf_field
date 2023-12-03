@@ -433,52 +433,6 @@ class BiLi(SOFADataset):
         return os.path.join(self.sofa_dir, "IRC_%s_C_HRIR_96000.sofa" % subject_ID)
 
 
-class MergedSOFADataset(Dataset):
-    def __init__(self):
-        self.all_dataset_funcs = [ARI, HUTUBS, ITA, CIPIC, Prin3D3A, RIEC, BiLi, Listen, Crossmod]
-        self.all_datasets = []
-        self.length_array = []
-        for dataset_func in self.all_dataset_funcs:
-            self.all_datasets.append(dataset_func())
-        for dataset in self.all_datasets:
-            self.length_array.append(len(dataset))
-            irs_array = []
-            for i in range(0, len(dataset), 2):
-                location, irs = dataset[i]
-                irs_array.append(irs)
-            irs_array = np.array(irs_array)
-            dataset.mean_left = np.mean(irs_array, axis=0)
-            dataset.std_left = np.std(irs_array, axis=0)
-            irs_array = []
-            for i in range(1, len(dataset), 2):
-                location, irs = dataset[i]
-                irs_array.append(irs)
-            irs_array = np.array(irs_array)
-            dataset.mean_right = np.mean(irs_array, axis=0)
-            dataset.std_right = np.std(irs_array, axis=0)
-
-    def __len__(self):
-        return np.sum(self.length_array)
-
-    def __getitem__(self, idx):
-        # Given idx, find which dataset
-        length_sum = np.cumsum(self.length_array)
-        for j in range(len(length_sum)):
-            if idx < length_sum[j]:
-                dataset_idx = j
-                item_idx = idx - length_sum[j-1]
-                break
-        ## normalize their magnitude
-        dataset = self.all_datasets[dataset_idx]
-        locs, irs = dataset[item_idx]
-        if item_idx % 2 == 0:
-            irs = (irs - dataset.mean_left) / dataset.std_left
-        else:
-            irs = (irs - dataset.mean_right) / dataset.std_right
-        return locs, irs
-
-
-
 
 if __name__ == "__main__":
     # hutubs = HUTUBS()
